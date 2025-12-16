@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email List Extractor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .stats {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 4px;
+        }
+        .email-preview {
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+            background: #fafafa;
+        }
+        .email-item {
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+            font-family: monospace;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📧 Affiliate Email Extractor</h1>
+        <p>Paste your transaction data below to extract unique user emails:</p>
+        
+        <textarea id="dataInput" placeholder="Paste your transaction data here..."></textarea>
+        
+        <button onclick="extractEmails()">Extract Emails</button>
+        <button onclick="downloadCSV()" id="downloadBtn" style="display:none; background:#2196F3;">Download CSV</button>
+        
+        <div id="stats" class="stats" style="display:none;">
+            <strong>📊 Results:</strong><br>
+            <span id="statsText"></span>
+        </div>
+        
+        <div id="preview" class="email-preview" style="display:none;"></div>
+    </div>
+
+    <script>
+        let extractedEmails = [];
+
+        function extractEmails() {
+            const data = document.getElementById('dataInput').value;
+            
+            if (!data.trim()) {
+                alert('Please paste your transaction data first!');
+                return;
+            }
+
+            // Email regex pattern
+            const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+            const allEmails = data.match(emailRegex) || [];
+            
+            // Filter and deduplicate
+            const uniqueEmails = [...new Set(allEmails.filter(email => 
+                !email.includes('geminicasino.com') && 
+                email !== 'casino' &&
+                email.includes('@')
+            ))];
+            
+            extractedEmails = uniqueEmails.sort();
+            
+            // Show stats
+            document.getElementById('stats').style.display = 'block';
+            document.getElementById('statsText').innerHTML = `
+                Found <strong>${extractedEmails.length}</strong> unique user emails
+            `;
+            
+            // Show preview
+            const preview = document.getElementById('preview');
+            preview.style.display = 'block';
+            preview.innerHTML = '<strong>Email Preview (first 50):</strong><br><br>' + 
+                extractedEmails.slice(0, 50).map(email => 
+                    `<div class="email-item">${email}</div>`
+                ).join('');
+            
+            if (extractedEmails.length > 50) {
+                preview.innerHTML += `<div style="padding:10px; text-align:center; color:#666;">
+                    ... and ${extractedEmails.length - 50} more emails
+                </div>`;
+            }
+            
+            // Show download button
+            document.getElementById('downloadBtn').style.display = 'inline-block';
+        }
+
+        function downloadCSV() {
+            if (extractedEmails.length === 0) {
+                alert('No emails to download!');
+                return;
+            }
+
+            // Create CSV content
+            let csvContent = "Email\n";
+            csvContent += extractedEmails.join('\n');
+            
+            // Create blob and download
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'affiliate_user_emails.csv');
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
